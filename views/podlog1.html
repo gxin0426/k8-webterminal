@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>pod logs</title>
+    <script src="static/js/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+        }
+        #logs {
+            width: 1000px;
+            height: 600px;
+            overflow-y: scroll;
+            border: 1px solid #1a1414;
+            padding: 10px;
+            margin: 0 auto;
+            background-color: #3ed752;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pod Logs</h1>
+    <div id="logs"></div>
+
+    <script>
+        $(document).ready(function () {
+            var localUrl = window.location.origin;
+            var url = localUrl + '/podlog/ws?context={{.context}}&namespace={{.namespace}}&pod={{.pod}}&container={{.container}}';
+            var sock = new SockJS(url);
+
+            sock.onmessage = function (e) {
+                $('#logs').append(e.data + '<br>');
+                $('#logs').scrollTop($('#logs')[0].scrollHeight);
+            };
+        });
+    </script>
+</body>
+</html>

@@ -13,5 +13,5 @@ func (self *PodLogController) Get() {
 	self.Data["namespace"] = self.GetString("namespace")
 	self.Data["pod"] = self.GetString("pod")
 	self.Data["container"] = self.GetString("container")
-	self.TplName = "podlog3.html"
+	self.TplName = "podlog1.html"
 }
