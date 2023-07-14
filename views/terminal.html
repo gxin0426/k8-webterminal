@@ -91,7 +91,7 @@
             term.write(e.data);
         };
         socket.onclose = function (e) {
-             term.write("session is close");
+             term.write("ws is close");
              $("#connect_container").show()
              $("#drop_container").hide()
         };

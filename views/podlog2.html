@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kubernetes Log Viewer</title>
+    <script src="static/js/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            localurl=window.location.href.split('/')[2]
+            url = 'http://'+localurl+'/podlog/ws?context={{.context}}&namespace={{.namespace}}&pod={{.pod}}&container={{.container}}'
+            var sock = new SockJS(url);
+            sock.onmessage = function (e) {
+                $('#logs').append(e.data + '<br>');
+                $('#logs').scrollTop($('#logs')[0].scrollHeight);
+            };
+        });
+    </script>
+    <style>
+        #logs {
+            width: 800px;
+            height: 600px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>pod logs</h1>
+    <div id="logs"></div>
+</body>
+</html>

@@ -2,17 +2,17 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
+	"net/http"
+
 	"github.com/astaxie/beego"
 	"gopkg.in/igm/sockjs-go.v2/sockjs"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
-	"net/http"
 )
 
 func (self TerminalSockjs) Read(p []byte) (int, error) {
@@ -50,7 +50,7 @@ type TerminalSockjs struct {
 // 实现tty size queue
 func (self *TerminalSockjs) Next() *remotecommand.TerminalSize {
 	size := <-self.sizeChan
-	beego.Debug(fmt.Sprintf("terminal size to width: %d height: %d", size.Width, size.Height))
+	// beego.Debug(fmt.Sprintf("terminal size to width: %d height: %d", size.Width, size.Height))
 	return size
 }
 
@@ -66,7 +66,11 @@ func buildConfigFromContextFlags(context, kubeconfigPath string) (*rest.Config, 
 func Handler(t *TerminalSockjs, cmd string) error {
 	config, err := buildConfigFromContextFlags(t.context, beego.AppConfig.String("kubeconfig"))
 	if err != nil {
-		return err
+		beego.Info("no config file  ", err)
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			return err
+		}
 	}
 	groupversion := schema.GroupVersion{
 		Group:   "",
@@ -80,40 +84,41 @@ func Handler(t *TerminalSockjs, cmd string) error {
 	if err != nil {
 		return err
 	}
-		req := restclient.Post().
-			Resource("pods").
-			Name(t.pod).
-			Namespace(t.namespace).
-			SubResource("exec").
-			Param("container", t.container).
-			Param("stdin", "true").
-			Param("stdout", "true").
-			Param("stderr", "true").
-			Param("command", cmd).Param("tty", "true")
-		req.VersionedParams(
-			&v1.PodExecOptions{
-				Container: t.container,
-				Command:   []string{},
-				Stdin:     true,
-				Stdout:    true,
-				Stderr:    true,
-				TTY:       true,
-			},
-			scheme.ParameterCodec,
-		)
-		executor, err := remotecommand.NewSPDYExecutor(
-			config, http.MethodPost, req.URL(),
-		)
-		if err != nil {
-			return err
-		}
-		return executor.Stream(remotecommand.StreamOptions{
-			Stdin:             t,
-			Stdout:            t,
-			Stderr:            t,
-			Tty:               true,
-			TerminalSizeQueue: t,
-		})
+	req := restclient.Post().
+		Resource("pods").
+		Name(t.pod).
+		Namespace(t.namespace).
+		SubResource("exec").
+		Param("container", t.container).
+		Param("stdin", "true").
+		Param("stdout", "true").
+		Param("stderr", "true").
+		Param("command", cmd).
+		Param("tty", "true")
+	req.VersionedParams(
+		&v1.PodExecOptions{
+			Container: t.container,
+			Command:   []string{},
+			Stdin:     true,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       true,
+		},
+		scheme.ParameterCodec,
+	)
+	executor, err := remotecommand.NewSPDYExecutor(
+		config, http.MethodPost, req.URL(),
+	)
+	if err != nil {
+		return err
+	}
+	return executor.Stream(remotecommand.StreamOptions{
+		Stdin:             t,
+		Stdout:            t,
+		Stderr:            t,
+		Tty:               true,
+		TerminalSizeQueue: t,
+	})
 }
 
 // 实现http.handler 接口获取入参
@@ -125,11 +130,10 @@ func (self TerminalSockjs) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	Sockjshandler := func(session sockjs.Session) {
 		t := &TerminalSockjs{session, make(chan *remotecommand.TerminalSize),
 			context, namespace, pod, container}
-		if err := Handler(t, "/bin/sh"); err != nil {
+		if err := Handler(t, "/bin/bash"); err != nil {
 			beego.Error(err)
-			beego.Error(Handler(t, "/bin/bash"))
+			beego.Error(Handler(t, "/bin/sh"))
 		}
 	}
-
 	sockjs.NewHandler("/terminal/ws", sockjs.DefaultOptions, Sockjshandler).ServeHTTP(w, r)
 }
