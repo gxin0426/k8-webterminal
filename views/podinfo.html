@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pod List</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pod List:</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Labels</th>
+                <th>Node</th>
+                <th>StartTime</th>
+                <th>Restart</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Pods}}
+            <tr>
+                <td>{{.Name}}</td>
+                <td>{{.Status}}</td>
+                <td>
+                    <ul>
+                        {{range $key, $value := .Labels}}
+                        <li>{{$key}}: {{$value}}</li>
+                        {{end}}
+                    </ul>
+                </td>
+                <td>{{.Node}}</td>
+                <td>{{.StartTime}}</td>
+                <td>{{.Restart}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</body>
+</html>

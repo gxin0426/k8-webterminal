@@ -63,33 +63,6 @@ func HandlerLog(t *PodLogSockjs) error {
 	if err := scanner.Err(); err != nil {
 		return err
 	}
-	// buf := new(bytes.Buffer)
-	// _, err = io.Copy(buf, podLogs)
-	// if err != nil {
-	// 	return err
-	// }
-	// _, err = t.Write(buf.Bytes())
-	// if err != nil {
-	// 	return err
-	// }
-
-	// 	str := buf.String()
-	// go func() {
-	// 	buffer := make([]byte, 4096)
-	// 	for {
-	// 		n, err := podLogs.Read(buffer)
-	// 		if err != nil {
-	// 			beego.Error("Error reading pod logs:", err)
-	// 			return
-	// 		}
-
-	// 		_, err = t.Write(buffer[:n])
-	// 		if err != nil {
-	// 			beego.Error("Error sending logs via WebSocket:", err)
-	// 			return
-	// 		}
-	// 	}
-	// }()
 	return nil
 
 }

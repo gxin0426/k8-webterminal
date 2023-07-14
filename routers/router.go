@@ -12,4 +12,5 @@ func init() {
 	beego.Handler("/terminal/ws", &controllers.TerminalSockjs{}, true)
 	beego.Router("/podlog", &controllers.PodLogController{}, "get:Get")
 	beego.Handler("/podlog/ws", &controllers.PodLogSockjs{}, true)
+	beego.Router("/searchpod", &controllers.SearchPodController{}, "get:Get")
 }
